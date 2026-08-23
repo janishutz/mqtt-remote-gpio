@@ -63,7 +63,8 @@
                         "type": "string"
                     },
                     "pin": {
-                        "type": "number"
+                        "type": "number",
+                        "description": "The pint that is controlled by this topic"
                     },
                     "mode": {
                         "type": "string",
@@ -71,39 +72,47 @@
                             "in",
                             "out"
                         ],
-                        "description": ""
+                        "description": "The type of the pin. When set to IN, changes to this pin will be published to this topic, setting it to OUT, updates sent to this topic will make the pin change state to the specified state"
+                    }
+                }
+            },
+            "if": {
+                "properties": {
+                    "mode": {
+                        "const": "in"
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "pollInterval": {
+                        "type": "number",
+                        "description": "The time between polls of the value of the GPIO pin, in cycles (as configured in general)",
+                        "minimum": 1,
+                        "maximum": 65535,
+                        "default": 1
                     }
                 },
-                "if": {
-                    "properties": {
-                        "mode": {
-                            "const": "in"
-                        }
-                    }
-                },
-                "then": {
-                    "properties": {
-                        "pollInterval": {
-                            "type": "number",
-                            "description": "The time between polls of the value of the GPIO pin, in milliseconds. Updates are only sent if state changes",
-                            "minimum": 100,
-                            "maximum": 65535
-                        }
-                    },
-                    "required": [
-                        "topic",
-                        "pin",
-                        "mode",
-                        "pollInterval"
-                    ]
-                },
-                "else": {},
                 "required": [
                     "topic",
                     "pin",
-                    "mode"
+                    "mode",
+                    "pollInterval"
                 ]
-            }
+            },
+            "else": {},
+            "required": [
+                "topic",
+                "pin",
+                "mode"
+            ]
+        },
+        "cycleInterval": {
+            "type": "number",
+            "minimum": 50,
+            "maximum": 65535,
+            "default": 100,
+            "description": "How many miliseconds should ellapse between polls of the pin states. Updates are only sent when the state actually changes"
         }
     }
 }
