@@ -1,0 +1,9 @@
+[package]
+name = "mqtt-remote-gpio"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gpio = "0.4.1"
+rumqttc = "0.25.1"
+rust-yaml = "1.1.0"

@@ -1,0 +1,109 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "properties": {
+        "mqtt": {
+            "type": "object",
+            "description": "Configuration of the MQTT server upstream",
+            "properties": {
+                "host": {
+                    "type": "string",
+                    "description": "The hostname or IP of the MQTT server"
+                },
+                "port": {
+                    "type": "number",
+                    "description": "The port of the MQTT server",
+                    "default": 1883
+                },
+                "authentication": {
+                    "type": "boolean",
+                    "description": "Whether or not the endpoint requires authentication",
+                    "default": false
+                }
+            },
+            "if": {
+                "properties": {
+                    "authentication": {
+                        "const": true
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "user": {
+                        "type": "string",
+                        "description": "The username to log into MQTT",
+                        "pattern": "([a-z-_]){2,}"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "The user's password",
+                        "pattern": "([\\w!#_\\-()]){3,}"
+                    }
+                },
+                "required": [
+                    "user",
+                    "password"
+                ]
+            },
+            "else": {
+                "additionalProperties": false
+            },
+            "required": [
+                "host",
+                "authentication"
+            ]
+        },
+        "topics": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string"
+                    },
+                    "pin": {
+                        "type": "number"
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "in",
+                            "out"
+                        ],
+                        "description": ""
+                    }
+                },
+                "if": {
+                    "properties": {
+                        "mode": {
+                            "const": "in"
+                        }
+                    }
+                },
+                "then": {
+                    "properties": {
+                        "pollInterval": {
+                            "type": "number",
+                            "description": "The time between polls of the value of the GPIO pin, in milliseconds. Updates are only sent if state changes",
+                            "minimum": 100,
+                            "maximum": 65535
+                        }
+                    },
+                    "required": [
+                        "topic",
+                        "pin",
+                        "mode",
+                        "pollInterval"
+                    ]
+                },
+                "else": {},
+                "required": [
+                    "topic",
+                    "pin",
+                    "mode"
+                ]
+            }
+        }
+    }
+}

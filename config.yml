@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=config.schema.json
+mqtt:
+  host: ""
+  port: 1883
+  authentication: true
+  password: "234"
+  user: "mqtt"
