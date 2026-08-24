@@ -6,4 +6,4 @@ edition = "2024"
 [dependencies]
 gpio = "0.4.1"
 rumqttc = "0.25.1"
-rust-yaml = "1.1.0"
+yaml-rust2 = "0.12.0"

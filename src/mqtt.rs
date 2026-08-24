@@ -1,0 +1,51 @@
+use crate::conf::{Config};
+use crate::gpio_utils::{GPIOController, split_topics_and_configure_pins};
+use rumqttc::{Client, MqttOptions, QoS};
+use std::{thread, time::Duration};
+
+/// MQTT connection handler
+///
+/// * `topics`: The MQTT topics to subscribe to
+/// * `mqttoptions`: MQTT options for conenction
+pub fn handler(config: Config) {
+    // Configure pins
+    let (subscribe_topics, publish_topics) = split_topics_and_configure_pins(config.topics);
+
+    // Configure MQTT
+    let mut mqttoptions = MqttOptions::new("mqtt", config.mqtt.host, config.mqtt.port);
+    mqttoptions.set_keep_alive(Duration::from_secs(5));
+    if config.mqtt.authentication {
+        mqttoptions.set_credentials(config.mqtt.user, config.mqtt.password);
+    }
+    let (client, mut connection) = Client::new(mqttoptions, 10);
+
+    // Subscribe to events
+    for topic in subscribe_topics.iter() {
+        println!("Setting up topic {}", topic.topic);
+        client
+            .subscribe(topic.topic.as_str(), QoS::AtMostOnce)
+            .unwrap_or_else(|x| println!("Setup failed, error: {:?}", x));
+    }
+
+    // Spawn thread to monitor pins
+    thread::spawn(move || {
+        loop {
+            for topic in &publish_topics {
+                // TODO: handle fails
+                client
+                    .publish(&topic.topic, QoS::AtLeastOnce, false, vec![0 as u8; 1])
+                    .unwrap_or_default();
+            }
+            thread::sleep(Duration::from_millis(100));
+        }
+    });
+
+    // Main thread listens to topic updates
+    let controller = GPIOController::new(subscribe_topics);
+    for (_, notification) in connection.iter().enumerate() {
+        println!("Notification {:?}", notification);
+        controller.handle_event();
+        thread::sleep(Duration::from_millis(100));
+        // TODO: Handle pin value change instructions
+    }
+}

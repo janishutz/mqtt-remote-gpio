@@ -107,12 +107,18 @@
                 "mode"
             ]
         },
-        "cycleInterval": {
+        "pollInterval": {
             "type": "number",
             "minimum": 50,
             "maximum": 65535,
             "default": 100,
             "description": "How many miliseconds should ellapse between polls of the pin states. Updates are only sent when the state actually changes"
         }
-    }
+    },
+    "additionalProperties": false,
+    "required": [
+        "pollInterval",
+        "topics",
+        "mqtt"
+    ]
 }
