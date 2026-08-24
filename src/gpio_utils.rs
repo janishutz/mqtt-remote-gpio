@@ -1,4 +1,4 @@
-use gpio::{GpioIn, GpioOut};
+use gpio::{GpioIn};
 use rumqttc::Publish;
 use std::collections::HashMap;
 

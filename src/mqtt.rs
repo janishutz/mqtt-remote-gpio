@@ -38,7 +38,7 @@ pub fn handler(config: Config) {
                         &topic.topic,
                         QoS::AtLeastOnce,
                         false,
-                        vec![read_pin(&mut topic.gpio); 1],
+                        vec![read_pin(&mut topic.gpio)],
                     )
                     .unwrap_or_default();
             }
