@@ -1,6 +1,7 @@
-use crate::conf::{Config};
-use crate::gpio_utils::{GPIOController, split_topics_and_configure_pins};
-use rumqttc::{Client, MqttOptions, QoS};
+use crate::conf::Config;
+use crate::gpio_utils::{GPIOController, read_pin, split_topics_and_configure_pins};
+use rumqttc::Packet::Publish;
+use rumqttc::{Client, Event, MqttOptions, QoS};
 use std::{thread, time::Duration};
 
 /// MQTT connection handler
@@ -9,7 +10,7 @@ use std::{thread, time::Duration};
 /// * `mqttoptions`: MQTT options for conenction
 pub fn handler(config: Config) {
     // Configure pins
-    let (subscribe_topics, publish_topics) = split_topics_and_configure_pins(config.topics);
+    let (mut input_pins, output_pins) = split_topics_and_configure_pins(config.topics);
 
     // Configure MQTT
     let mut mqttoptions = MqttOptions::new("mqtt", config.mqtt.host, config.mqtt.port);
@@ -20,7 +21,7 @@ pub fn handler(config: Config) {
     let (client, mut connection) = Client::new(mqttoptions, 10);
 
     // Subscribe to events
-    for topic in subscribe_topics.iter() {
+    for topic in output_pins.iter() {
         println!("Setting up topic {}", topic.topic);
         client
             .subscribe(topic.topic.as_str(), QoS::AtMostOnce)
@@ -30,22 +31,32 @@ pub fn handler(config: Config) {
     // Spawn thread to monitor pins
     thread::spawn(move || {
         loop {
-            for topic in &publish_topics {
+            for topic in input_pins.iter_mut() {
                 // TODO: handle fails
                 client
-                    .publish(&topic.topic, QoS::AtLeastOnce, false, vec![0 as u8; 1])
+                    .publish(
+                        &topic.topic,
+                        QoS::AtLeastOnce,
+                        false,
+                        vec![read_pin(&mut topic.gpio); 1],
+                    )
                     .unwrap_or_default();
             }
-            thread::sleep(Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(config.poll_interval));
         }
     });
 
     // Main thread listens to topic updates
-    let controller = GPIOController::new(subscribe_topics);
+    let mut controller = GPIOController::new(output_pins);
     for (_, notification) in connection.iter().enumerate() {
-        println!("Notification {:?}", notification);
-        controller.handle_event();
-        thread::sleep(Duration::from_millis(100));
+        let msg = notification.unwrap();
+        if let Event::Incoming(val) = msg {
+            if let Publish(content) = val {
+                controller.handle_event(&content);
+            }
+        }
+        // println!("Notification {:?}", msg);
+        thread::sleep(Duration::from_millis(config.poll_interval / 2));
         // TODO: Handle pin value change instructions
     }
 }

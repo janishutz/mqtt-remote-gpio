@@ -12,5 +12,6 @@ topics:
   - topic: ""
     pin: 0
     mode: "in"
+    offTimeout: -1 # -1 disables automatic switch off of the pin
 
 pollInterval: 100

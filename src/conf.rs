@@ -6,6 +6,7 @@ pub struct Topic {
     pub topic: String,
     pub pin: u16,
     pub mode: PinMode,
+    pub off_timeout: u64,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -27,7 +28,7 @@ pub struct MqttConfig {
 pub struct Config {
     pub mqtt: MqttConfig,
     pub topics: Vec<Topic>,
-    pub poll_interval: u16,
+    pub poll_interval: u64,
 }
 
 pub fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
@@ -69,6 +70,11 @@ pub fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
                         .expect(&format!("Invalid topic configuration found at index {}. A pin is required", i))
                         .as_i64()
                         .expect(&format!("Invalid topic configuration found at index {}. The pin should be a 16 bit integer (0-65535)", i)) as u16,
+                off_timeout: topic
+                        .get(&Yaml::String(String::from("pin")))
+                        .unwrap_or(&Yaml::Integer(-1))
+                        .as_i64()
+                        .expect(&format!("Invalid topic configuration found at index {}. The pin should be a 16 bit integer (0-65535)", i)) as u64,
                 mode: if topic
                         .get(&Yaml::String(String::from("mode")))
                         .expect(&format!("Invalid topic configuration found at index {}. Mode is unset", i))
@@ -119,6 +125,6 @@ pub fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
             .get(&Yaml::String(String::from("pollInterval")))
             .expect("Missing config for pollInterval")
             .as_i64()
-            .expect("pollInterval is not an integer value") as u16,
+            .expect("pollInterval is not an integer value") as u64,
     })
 }
