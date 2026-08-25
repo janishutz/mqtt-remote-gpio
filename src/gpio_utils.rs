@@ -136,7 +136,7 @@ impl GPIOController {
             for char in instruction.payload {
                 instr.push_str(&char.to_string())
             }
-            println!(instr);
+            println!("{}", instr);
             if pin.off_timeout > 0 {
                 self.timeout_topics
                     .push((pin.topic.clone(), SystemTime::now(), pin.off_timeout));
