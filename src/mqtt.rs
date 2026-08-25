@@ -36,7 +36,6 @@ pub fn handler(config: Config) {
         loop {
             let mut i = 0;
             for topic in input_pins.iter_mut() {
-                // TODO: handle fails
                 let val = read_pin(&mut topic.gpio);
                 if val != pin_state[i] {
                     pin_state[i] = val;
@@ -65,8 +64,6 @@ pub fn handler(config: Config) {
                 controller.handle_event(&content);
             }
         }
-        // println!("Notification {:?}", msg);
         thread::sleep(Duration::from_millis(config.poll_interval / 2));
-        // TODO: Handle pin value change instructions
     }
 }

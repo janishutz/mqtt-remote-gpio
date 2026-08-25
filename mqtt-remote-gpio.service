@@ -1,0 +1,7 @@
+[Service]
+Type=simple
+ExecStart=/usr/bin/mqtt-remote-gpio
+
+[Unit]
+Restart=always
+RestartSec=10
