@@ -12,6 +12,7 @@ pub struct InputPin {
 pub struct OutputPin {
     gpio: gpio::OutputPin,
     off_timeout: u64,
+    pub id: u8,
     pub topic: String,
 }
 
@@ -60,6 +61,7 @@ pub fn split_topics_and_configure_pins(topics: Vec<Topic>) -> (Vec<InputPin>, Ve
                     .get(topic.pin)
                     .expect(&format!("Unable to find GPIO pin {}", topic.pin))
                     .into_output_low(),
+                id: topic.pin,
                 off_timeout: topic.off_timeout,
             });
             out_used.push(topic.pin)
@@ -132,8 +134,10 @@ impl GPIOController {
                 instr.push(*c as char)
             }
             if instr == "ON" {
+                println!("Turned ON pin {}", pin.id);
                 pin.gpio.set_high();
             } else if instr == "OFF" {
+                println!("Turned OFF pin {}", pin.id);
                 pin.gpio.set_low();
             } else {
                 println!("Received unknown instruction {}", instr);
