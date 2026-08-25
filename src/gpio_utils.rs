@@ -129,12 +129,17 @@ impl GPIOController {
                 .out_pins
                 .get(&instruction.topic)
                 .expect("Failed to load pins data");
-            println!("Hello World, pin {}", pin.id);
             let mut instr = "".to_string();
             for c in &instruction.payload {
                 instr.push(*c as char)
             }
-            println!("{}", instr);
+            if instr == "ON" {
+                pin.gpio.set_high();
+            } else if instr == "OFF" {
+                pin.gpio.set_low();
+            } else {
+                println!("Received unknown instruction", instr);
+            }
             if pin.off_timeout > 0 {
                 self.timeout_topics
                     .push((pin.topic.clone(), SystemTime::now(), pin.off_timeout));
