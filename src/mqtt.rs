@@ -30,17 +30,27 @@ pub fn handler(config: Config) {
 
     // Spawn thread to monitor pins
     thread::spawn(move || {
+        let mut pin_state: Vec<u8> = vec![0; input_pins.len()];
+        let off: Vec<u8> = b"OFF".to_vec();
+        let on: Vec<u8> = b"ON".to_vec();
         loop {
+            let mut i = 0;
             for topic in input_pins.iter_mut() {
                 // TODO: handle fails
-                client
-                    .publish(
-                        String::from(&topic.topic) + &format!("/{}", topic.id),
-                        QoS::AtLeastOnce,
-                        false,
-                        vec![read_pin(&mut topic.gpio)],
-                    )
-                    .unwrap_or_default();
+                let val = read_pin(&mut topic.gpio);
+                if val != pin_state[i] {
+                    println!("Value change for pin {} detected", topic.id);
+                    pin_state[i] = val;
+                    client
+                        .publish(
+                            String::from(&topic.topic) + &format!("/{}", topic.id),
+                            QoS::AtLeastOnce,
+                            false,
+                            if val == 0 { off.clone() } else { on.clone() },
+                        )
+                        .unwrap_or_default();
+                }
+                i += 1;
             }
             thread::sleep(Duration::from_millis(config.poll_interval));
         }

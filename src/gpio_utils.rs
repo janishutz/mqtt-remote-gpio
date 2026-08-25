@@ -1,19 +1,19 @@
-use gpio::{GpioIn, GpioOut};
+use rppal::gpio;
 use rumqttc::Publish;
 use std::{collections::HashMap, time::SystemTime};
 
 use crate::conf::{PinMode, Topic};
 
 pub struct InputPin {
-    pub gpio: gpio::sysfs::SysFsGpioInput,
-    pub id: u16,
+    pub gpio: gpio::InputPin,
+    pub id: u8,
     pub topic: String,
 }
 
 pub struct OutputPin {
-    gpio: gpio::sysfs::SysFsGpioOutput,
+    gpio: gpio::OutputPin,
     off_timeout: u64,
-    pub id: u16,
+    pub id: u8,
     pub topic: String,
 }
 
@@ -23,8 +23,8 @@ pub struct OutputPin {
 pub fn split_topics_and_configure_pins(topics: Vec<Topic>) -> (Vec<InputPin>, Vec<OutputPin>) {
     let mut in_pins: Vec<InputPin> = Vec::new();
     let mut out_pins: Vec<OutputPin> = Vec::new();
-    let mut in_used: Vec<u16> = Vec::new();
-    let mut out_used: Vec<u16> = Vec::new();
+    let mut in_used: Vec<u8> = Vec::new();
+    let mut out_used: Vec<u8> = Vec::new();
     for topic in topics {
         if topic.mode == PinMode::IN {
             if in_used.contains(&topic.pin) {
@@ -36,10 +36,13 @@ pub fn split_topics_and_configure_pins(topics: Vec<Topic>) -> (Vec<InputPin>, Ve
             } else if out_used.contains(&topic.pin) {
                 panic!("Pin {} used for both input and output!", topic.pin)
             }
+            let pin = gpio::Gpio::new().expect("GPIO pin access failed");
             in_pins.push(InputPin {
                 topic: topic.topic,
-                gpio: gpio::sysfs::SysFsGpioInput::open(topic.pin)
-                    .expect(&format!("Unable to find GPIO pin {}", topic.pin)),
+                gpio: pin
+                    .get(topic.pin)
+                    .expect(&format!("Unable to find GPIO pin {}", topic.pin))
+                    .into_input(),
                 id: topic.pin,
             });
             in_used.push(topic.pin)
@@ -53,10 +56,13 @@ pub fn split_topics_and_configure_pins(topics: Vec<Topic>) -> (Vec<InputPin>, Ve
             } else if in_used.contains(&topic.pin) {
                 panic!("Pin {} used for both input and output!", topic.pin)
             }
+            let pin = gpio::Gpio::new().expect("GPIO pin access failed");
             out_pins.push(OutputPin {
                 topic: topic.topic,
-                gpio: gpio::sysfs::SysFsGpioOutput::open(topic.pin)
-                    .expect(&format!("Unable to find GPIO pin {}", topic.pin)),
+                gpio: pin
+                    .get(topic.pin)
+                    .expect(&format!("Unable to find GPIO pin {}", topic.pin))
+                    .into_output_low(),
                 id: topic.pin,
                 off_timeout: topic.off_timeout,
             });
@@ -67,8 +73,9 @@ pub fn split_topics_and_configure_pins(topics: Vec<Topic>) -> (Vec<InputPin>, Ve
     return (in_pins, out_pins);
 }
 
-pub fn read_pin(pin: &mut gpio::sysfs::SysFsGpioInput) -> u8 {
-    if let gpio::GpioValue::Low = pin.read_value().expect("Failed reading value") {
+pub fn read_pin(pin: &mut gpio::InputPin) -> u8 {
+    // TODO: Consider moving to interrupt based solution
+    if let gpio::Level::High = pin.read() {
         return 1;
     } else {
         return 0;
@@ -114,7 +121,6 @@ impl GPIOController {
                     .expect("Failed to retrieve pin")
                     .gpio
                     .set_low()
-                    .unwrap_or_default();
             }
         }
     }

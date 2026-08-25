@@ -4,7 +4,7 @@ use yaml_rust2::{Yaml, YamlLoader};
 #[derive(Debug)]
 pub struct Topic {
     pub topic: String,
-    pub pin: u16,
+    pub pin: u8,
     pub mode: PinMode,
     pub off_timeout: u64,
 }
@@ -69,7 +69,7 @@ pub fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
                         .get(&Yaml::String(String::from("pin")))
                         .expect(&format!("Invalid topic configuration found at index {}. A pin is required", i))
                         .as_i64()
-                        .expect(&format!("Invalid topic configuration found at index {}. The pin should be a 16 bit integer (0-65535)", i)) as u16,
+                        .expect(&format!("Invalid topic configuration found at index {}. The pin should be a 16 bit integer (0-65535)", i)) as u8,
                 off_timeout: topic
                         .get(&Yaml::String(String::from("pin")))
                         .unwrap_or(&Yaml::Integer(-1))
