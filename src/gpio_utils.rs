@@ -6,7 +6,6 @@ use crate::conf::{PinMode, Topic};
 
 pub struct InputPin {
     pub gpio: gpio::InputPin,
-    pub id: u8,
     pub topic: String,
 }
 
@@ -43,7 +42,6 @@ pub fn split_topics_and_configure_pins(topics: Vec<Topic>) -> (Vec<InputPin>, Ve
                     .get(topic.pin)
                     .expect(&format!("Unable to find GPIO pin {}", topic.pin))
                     .into_input(),
-                id: topic.pin,
             });
             in_used.push(topic.pin)
         } else {
@@ -133,8 +131,8 @@ impl GPIOController {
                 .expect("Failed to load pins data");
             println!("Hello World, pin {}", pin.id);
             let mut instr = "".to_string();
-            for char in &instruction.payload {
-                instr.push_str(&char.to_string())
+            for c in &instruction.payload {
+                instr.push(*c as char)
             }
             println!("{}", instr);
             if pin.off_timeout > 0 {
