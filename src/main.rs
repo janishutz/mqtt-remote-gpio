@@ -1,4 +1,3 @@
-use std::{thread, time::Duration};
 mod conf;
 mod gpio_utils;
 mod mqtt;
@@ -13,7 +12,6 @@ fn main() {
 
     // TODO: Remove this when done
     println!("{:#?}", config);
-    thread::sleep(Duration::from_secs(2));
 
     mqtt::handler(config);
 }
