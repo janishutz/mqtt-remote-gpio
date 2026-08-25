@@ -9,7 +9,7 @@ mqtt:
 # TODO: Consider adding an auto-off setting for out mode
 # Add default setting (also only for out)
 topics:
-  - topic: ""
+  - topic: "" # The pin id is appended as /<id> to the topic.
     pin: 0
     mode: "in"
     offTimeout: -1 # -1 disables automatic switch off of the pin

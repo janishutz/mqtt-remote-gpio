@@ -35,7 +35,7 @@ pub fn handler(config: Config) {
                 // TODO: handle fails
                 client
                     .publish(
-                        &topic.topic,
+                        String::from(&topic.topic) + &format!("/{}", topic.id),
                         QoS::AtLeastOnce,
                         false,
                         vec![read_pin(&mut topic.gpio)],
@@ -49,6 +49,7 @@ pub fn handler(config: Config) {
     // Main thread listens to topic updates
     let mut controller = GPIOController::new(output_pins);
     for (_, notification) in connection.iter().enumerate() {
+        controller.iter_handler();
         let msg = notification.unwrap();
         if let Event::Incoming(val) = msg {
             if let Publish(content) = val {

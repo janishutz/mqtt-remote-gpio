@@ -1,6 +1,6 @@
-use gpio::{GpioIn};
+use gpio::{GpioIn, GpioOut};
 use rumqttc::Publish;
-use std::collections::HashMap;
+use std::{collections::HashMap, time::SystemTime};
 
 use crate::conf::{PinMode, Topic};
 
@@ -78,6 +78,7 @@ pub fn read_pin(pin: &mut gpio::sysfs::SysFsGpioInput) -> u8 {
 pub struct GPIOController {
     out_pins: HashMap<String, OutputPin>,
     topics: Vec<String>,
+    timeout_topics: Vec<(String, SystemTime, u64)>,
 }
 
 impl GPIOController {
@@ -89,6 +90,7 @@ impl GPIOController {
         let mut controller = GPIOController {
             out_pins: HashMap::new(),
             topics: Vec::new(),
+            timeout_topics: Vec::new(),
         };
 
         // Build hash maps
@@ -101,6 +103,22 @@ impl GPIOController {
         return controller;
     }
 
+    pub fn iter_handler(&mut self) {
+        for i in 0..self.timeout_topics.len() {
+            let topic = &self.timeout_topics[i];
+            if topic.1.elapsed().unwrap().as_millis() > (topic.2 as u128) {
+                let name = topic.0.clone();
+                self.timeout_topics.remove(i);
+                self.out_pins
+                    .get_mut(&name)
+                    .expect("Failed to retrieve pin")
+                    .gpio
+                    .set_low()
+                    .unwrap_or_default();
+            }
+        }
+    }
+
     pub fn handle_event(&mut self, instruction: &Publish) {
         if self.topics.contains(&instruction.topic) {
             let pin = self
@@ -109,7 +127,10 @@ impl GPIOController {
                 .expect("Failed to load pins data");
             println!("Hello World, pin {}", pin.id);
             println!("Payload {}", instruction.payload.first().unwrap());
-            // TODO: Off timeout
+            if pin.off_timeout > 0 {
+                self.timeout_topics
+                    .push((pin.topic.clone(), SystemTime::now(), pin.off_timeout));
+            }
         }
     }
 }
