@@ -133,7 +133,7 @@ impl GPIOController {
                 .expect("Failed to load pins data");
             println!("Hello World, pin {}", pin.id);
             let mut instr = "".to_string();
-            for char in instruction.payload {
+            for char in &instruction.payload {
                 instr.push_str(&char.to_string())
             }
             println!("{}", instr);
