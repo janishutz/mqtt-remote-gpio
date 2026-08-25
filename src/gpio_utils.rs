@@ -132,7 +132,11 @@ impl GPIOController {
                 .get(&instruction.topic)
                 .expect("Failed to load pins data");
             println!("Hello World, pin {}", pin.id);
-            println!("Payload {}", instruction.payload.first().unwrap());
+            let mut instr = "".to_string();
+            for char in instruction.payload {
+                instr.push_str(&char.to_string())
+            }
+            println!(instr);
             if pin.off_timeout > 0 {
                 self.timeout_topics
                     .push((pin.topic.clone(), SystemTime::now(), pin.off_timeout));

@@ -39,11 +39,10 @@ pub fn handler(config: Config) {
                 // TODO: handle fails
                 let val = read_pin(&mut topic.gpio);
                 if val != pin_state[i] {
-                    println!("Value change for pin {} detected", topic.id);
                     pin_state[i] = val;
                     client
                         .publish(
-                            String::from(&topic.topic) + &format!("/{}", topic.id),
+                            String::from(&topic.topic),
                             QoS::AtLeastOnce,
                             false,
                             if val == 0 { off.clone() } else { on.clone() },
