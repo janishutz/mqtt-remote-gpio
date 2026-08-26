@@ -1,6 +1,6 @@
 use rppal::gpio;
 use rumqttc::Publish;
-use std::{collections::HashMap, time::SystemTime};
+use std::{collections::HashMap, thread, time::{Duration, SystemTime}};
 
 use crate::conf::{PinMode, Topic};
 
@@ -11,7 +11,7 @@ pub struct InputPin {
 
 pub struct OutputPin {
     gpio: gpio::OutputPin,
-    off_timeout: u64,
+    off_timeout: i64,
     pub id: u8,
     pub topic: String,
 }
@@ -83,7 +83,7 @@ pub fn read_pin(pin: &mut gpio::InputPin) -> u8 {
 pub struct GPIOController {
     out_pins: HashMap<String, OutputPin>,
     topics: Vec<String>,
-    timeout_topics: Vec<(String, SystemTime, u64)>,
+    timeout_topics: Vec<(String, SystemTime, i64)>,
 }
 
 impl GPIOController {
@@ -139,12 +139,17 @@ impl GPIOController {
             } else if instr == "OFF" {
                 println!("Turned OFF pin {}", pin.id);
                 pin.gpio.set_low();
+            } else if instr == "PRESS" || instr == "TOGGLE" {
+                pin.gpio.set_high();
+                if pin.off_timeout > 0 {
+                    self.timeout_topics
+                        .push((pin.topic.clone(), SystemTime::now(), pin.off_timeout));
+                } else {
+                    thread::sleep(Duration::from_millis(10));
+                    pin.gpio.set_low();
+                }
             } else {
                 println!("Received unknown instruction {}", instr);
-            }
-            if pin.off_timeout > 0 {
-                self.timeout_topics
-                    .push((pin.topic.clone(), SystemTime::now(), pin.off_timeout));
             }
         }
     }

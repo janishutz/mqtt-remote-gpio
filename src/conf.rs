@@ -6,7 +6,7 @@ pub struct Topic {
     pub topic: String,
     pub pin: u8,
     pub mode: PinMode,
-    pub off_timeout: u64,
+    pub off_timeout: i64,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -33,7 +33,7 @@ pub struct Config {
 
 pub fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
     // Read config file
-    let conf = fs::read_to_string(path).unwrap_or_else(|_| String::from("test"));
+    let conf = fs::read_to_string(path).unwrap_or("config".to_string());
     let yaml = &YamlLoader::load_from_str(&conf).unwrap()[0];
     let conf = yaml
         .as_hash()
@@ -74,7 +74,7 @@ pub fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
                         .get(&Yaml::String(String::from("pin")))
                         .unwrap_or(&Yaml::Integer(-1))
                         .as_i64()
-                        .expect(&format!("Invalid topic configuration found at index {}. The pin should be a 16 bit integer (0-65535)", i)) as u64,
+                        .expect(&format!("Invalid topic configuration found at index {}. The pin should be a 16 bit integer (0-65535)", i)),
                 mode: if topic
                         .get(&Yaml::String(String::from("mode")))
                         .expect(&format!("Invalid topic configuration found at index {}. Mode is unset", i))

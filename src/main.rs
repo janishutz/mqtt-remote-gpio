@@ -13,7 +13,7 @@ fn main() {
         ");
 
     let mut conf_path = std::env::args().nth(1).unwrap_or("config.yml".to_string());
-    if fs::exists(conf_path).unwrap_or(false) {
+    if !fs::exists(&conf_path).unwrap_or(false) {
         conf_path = "/etc/mqtt-remote-gpio.config.yml".to_string();
     }
 
