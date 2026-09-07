@@ -2,5 +2,4 @@
 Control GPIO pins using MQTT on Raspberry Pi and more
 
 ## Notice
-This project is in very early development and I have not previously worked with MQTT.
-I also have little experience in Rust, so the code quality will initially be low and improve quite rapidly.
+This project has reached working status and will be updated from time to time if / when I find issues with it
