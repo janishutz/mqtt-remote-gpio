@@ -85,12 +85,12 @@
             },
             "then": {
                 "properties": {
-                    "pollInterval": {
+                    "off_timeout": {
                         "type": "number",
-                        "description": "The time between polls of the value of the GPIO pin, in cycles (as configured in general)",
-                        "minimum": 1,
+                        "description": "The time that the signal stays on for, in miliseconds",
+                        "minimum": -1,
                         "maximum": 65535,
-                        "default": 1
+                        "default": -1
                     }
                 },
                 "required": [

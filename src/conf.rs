@@ -71,7 +71,7 @@ pub fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
                         .as_i64()
                         .expect(&format!("Invalid topic configuration found at index {}. The pin should be a 16 bit integer (0-65535)", i)) as u8,
                 off_timeout: topic
-                        .get(&Yaml::String(String::from("pin")))
+                        .get(&Yaml::String(String::from("off_timeout")))
                         .unwrap_or(&Yaml::Integer(-1))
                         .as_i64()
                         .expect(&format!("Invalid topic configuration found at index {}. The pin should be a 16 bit integer (0-65535)", i)),
